@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FORGE — Fitness Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0e0f11;
+    --bg2: #141618;
+    --bg3: #1c1e22;
+    --bg4: #242629;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --lime: #c8f135;
+    --lime-dim: rgba(200,241,53,0.12);
+    --amber: #f5a623;
+    --amber-dim: rgba(245,166,35,0.12);
+    --cyan: #38e8d4;
+    --cyan-dim: rgba(56,232,212,0.1);
+    --red: #ff5a5a;
+    --red-dim: rgba(255,90,90,0.1);
+    --text: #f0f0ee;
+    --text2: #9a9b9e;
+    --text3: #5e6068;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --transition: 0.22s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* GRID TEXTURE */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* HEADER */
+  header {
+    position: relative;
+    z-index: 10;
+    padding: 0 2rem;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: rgba(14,15,17,0.9);
+    backdrop-filter: blur(12px);
+  }
+
+  .logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 1.6rem;
+    letter-spacing: 0.06em;
+    color: var(--text);
+  }
+
+  .logo span { color: var(--lime); }
+
+  .header-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    border: 1px solid var(--border2);
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  /* MAIN LAYOUT */
+  main {
+    position: relative;
+    z-index: 1;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  /* TABS */
+  .tab-nav {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 2rem;
+    background: var(--bg2);
+    padding: 5px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    width: fit-content;
+  }
+
+  .tab-btn {
+    padding: 9px 22px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text2);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+  }
+
+  .tab-btn:hover { color: var(--text); background: var(--bg3); }
+
+  .tab-btn.active {
+    background: var(--lime);
+    color: #0e0f11;
+    font-weight: 600;
+  }
+
+  .tab-btn.active i { color: #0e0f11; }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* DASHBOARD GRID */
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  @media (max-width: 900px) {
+    .dashboard-grid { grid-template-columns: 1fr; }
+  }
+
+  /* CARD */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color var(--transition);
+  }
+
+  .card:hover { border-color: var(--border2); }
+
+  .card-header {
+    padding: 1.25rem 1.5rem 1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .card-header-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--lime-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--lime);
+    font-size: 0.85rem;
+  }
+
+  .card-header h3 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .card-body { padding: 1.5rem; }
+
+  /* FORM ELEMENTS */
+  .form-group { margin-bottom: 1.25rem; }
+
+  .form-label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 8px;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .form-input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+    -moz-appearance: textfield;
+  }
+
+  .form-input::-webkit-outer-spin-button,
+  .form-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  .form-input:focus {
+    border-color: var(--lime);
+    box-shadow: 0 0 0 3px rgba(200,241,53,0.12);
+  }
+
+  .form-input::placeholder { color: var(--text3); }
+
+  .unit-toggle {
+    display: flex;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .unit-btn {
+    padding: 10px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: none;
+    background: transparent;
+    color: var(--text3);
+    cursor: pointer;
+    transition: all var(--transition);
+    letter-spacing: 0.04em;
+  }
+
+  .unit-btn.active {
+    background: var(--lime);
+    color: #0e0f11;
+  }
+
+  /* GENDER TOGGLE */
+  .gender-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .gender-btn {
+    padding: 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text2);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .gender-btn:hover { border-color: var(--border2); color: var(--text); }
+
+  .gender-btn.active {
+    background: var(--lime-dim);
+    border-color: var(--lime);
+    color: var(--lime);
+  }
+
+  /* ACTIVITY CARDS */
+  .activity-grid { display: flex; flex-direction: column; gap: 6px; }
+
+  .activity-card {
+    padding: 11px 14px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .activity-card:hover { border-color: rgba(200,241,53,0.3); }
+
+  .activity-card.active {
+    background: var(--lime-dim);
+    border-color: var(--lime);
+  }
+
+  .activity-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border2);
+    flex-shrink: 0;
+    transition: background var(--transition);
+  }
+
+  .activity-card.active .activity-dot { background: var(--lime); }
+
+  .activity-label {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text2);
+    transition: color var(--transition);
+  }
+
+  .activity-card.active .activity-label { color: var(--lime); }
+
+  .activity-desc {
+    font-size: 0.75rem;
+    color: var(--text3);
+    margin-top: 1px;
+  }
+
+  /* RESULTS PANEL */
+  .results-panel { display: flex; flex-direction: column; gap: 1.25rem; }
+
+  /* STAT BIG */
+  .stat-hero {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-hero::before {
+    content: '';
+    position: absolute;
+    top: -40px; left: 50%; transform: translateX(-50%);
+    width: 200px; height: 120px;
+    background: radial-gradient(ellipse, rgba(200,241,53,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .stat-hero-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 6px;
+  }
+
+  .stat-hero-value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 4rem;
+    font-weight: 900;
+    color: var(--lime);
+    line-height: 1;
+    margin-bottom: 4px;
+    transition: all 0.3s ease;
+  }
+
+  .stat-hero-unit {
+    font-size: 0.85rem;
+    color: var(--text2);
+    font-weight: 400;
+  }
+
+  /* CALORIE CARDS ROW */
+  .calorie-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .calorie-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.1rem 1rem;
+    text-align: center;
+    transition: all var(--transition);
+    cursor: default;
+  }
+
+  .calorie-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+
+  .calorie-card-icon {
+    font-size: 1.2rem;
+    margin-bottom: 6px;
+  }
+
+  .calorie-card-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 4px;
+  }
+
+  .calorie-card-value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.7rem;
+    font-weight: 800;
+    transition: all 0.3s ease;
+  }
+
+  .calorie-card-sub {
+    font-size: 0.68rem;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  .c-loss { color: var(--cyan); }
+  .c-maintain { color: var(--lime); }
+  .c-gain { color: var(--amber); }
+
+  /* MACRO BARS */
+  .macro-section {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+  }
+
+  .macro-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 1rem;
+  }
+
+  .macro-item { margin-bottom: 14px; }
+  .macro-item:last-child { margin-bottom: 0; }
+
+  .macro-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .macro-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .macro-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .macro-values {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    transition: all 0.3s ease;
+  }
+
+  .macro-bar-bg {
+    height: 6px;
+    background: var(--bg4);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .macro-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* BMR INFO */
+  .info-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--bg3);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+
+  .info-icon {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+
+  .info-label { font-size: 0.8rem; color: var(--text3); }
+  .info-value { font-weight: 600; font-size: 0.9rem; color: var(--text); margin-left: auto; }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text3);
+  }
+
+  .empty-state-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    opacity: 0.4;
+  }
+
+  .empty-state h4 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    color: var(--text2);
+  }
+
+  .empty-state p { font-size: 0.85rem; }
+
+  /* STRENGTH TAB */
+  .age-selector { margin-bottom: 1.5rem; }
+
+  .age-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+
+  @media (min-width: 600px) { .age-grid { grid-template-columns: repeat(4, 1fr); } }
+
+  .age-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.2rem 1rem;
+    cursor: pointer;
+    transition: all var(--transition);
+    text-align: center;
+  }
+
+  .age-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+
+  .age-card.active {
+    border-color: var(--lime);
+    background: var(--lime-dim);
+  }
+
+  .age-card-emoji { font-size: 1.8rem; margin-bottom: 8px; }
+
+  .age-card-range {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: 0.04em;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .age-card.active .age-card-range { color: var(--lime); }
+
+  .age-card-label { font-size: 0.72rem; color: var(--text3); font-weight: 500; }
+
+  /* STRENGTH CONTENT */
+  .strength-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+
+  @media (max-width: 680px) { .strength-content { grid-template-columns: 1fr; } }
+
+  .strength-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    transition: all var(--transition);
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .strength-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+
+  .strength-card-icon {
+    width: 36px; height: 36px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .s-lime { background: var(--lime-dim); color: var(--lime); }
+  .s-amber { background: var(--amber-dim); color: var(--amber); }
+  .s-cyan { background: var(--cyan-dim); color: var(--cyan); }
+  .s-red { background: var(--red-dim); color: var(--red); }
+
+  .strength-card-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text2);
+  }
+
+  .strength-list { list-style: none; }
+
+  .strength-list li {
+    font-size: 0.85rem;
+    color: var(--text2);
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.4;
+  }
+
+  .strength-list li:last-child { border-bottom: none; }
+
+  .strength-list li::before {
+    content: '—';
+    color: var(--text3);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .freq-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    background: var(--lime-dim);
+    border: 1px solid rgba(200,241,53,0.25);
+    border-radius: 20px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--lime);
+    letter-spacing: 0.04em;
+    margin-bottom: 1rem;
+  }
+
+  /* FULL STRENGTH LAYOUT */
+  .strength-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    animation: fadeIn 0.35s ease;
+  }
+
+  .no-select-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text3);
+    animation: fadeIn 0.3s ease;
+  }
+
+  .no-select-state i { font-size: 3rem; opacity: 0.25; margin-bottom: 1rem; }
+  .no-select-state h4 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 6px;
+  }
+  .no-select-state p { font-size: 0.85rem; }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    header { padding: 0 1rem; }
+    main { padding: 1.25rem 1rem 3rem; }
+    .calorie-row { grid-template-columns: 1fr; }
+    .tab-btn span.label { display: none; }
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+
+  /* NUMBER TRANSITION */
+  .num-flash {
+    animation: numFlash 0.3s ease;
+  }
+
+  @keyframes numFlash {
+    0% { opacity: 0.4; transform: scale(0.97); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  /* GAUGE */
+  .bmr-gauge {
+    display: flex;
+    gap: 10px;
+    margin-top: 1rem;
+    align-items: stretch;
+  }
+
+  .info-grid { display: flex; flex-direction: column; gap: 8px; }
+
+  /* HEIGHT INPUTS */
+  .height-imperial {
+    display: flex;
+    gap: 8px;
+  }
+
+  .height-imperial .form-input { flex: 1; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">FORGE<span>.</span></div>
+  <span class="header-badge">Fitness Intelligence</span>
+</header>
+
+<main>
+  <!-- TABS -->
+  <div class="tab-nav" role="tablist">
+    <button class="tab-btn active" onclick="switchTab('tdee')" id="tab-tdee" role="tab">
+      <i class="fa-solid fa-fire-flame-curved"></i>
+      <span class="label">TDEE Calculator</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('strength')" id="tab-strength" role="tab">
+      <i class="fa-solid fa-dumbbell"></i>
+      <span class="label">Training Guide</span>
+    </button>
+  </div>
+
+  <!-- TDEE PANEL -->
+  <div class="tab-panel active" id="panel-tdee">
+    <div class="dashboard-grid">
+
+      <!-- LEFT: INPUTS -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-icon"><i class="fa-solid fa-sliders"></i></div>
+          <h3>Your Stats</h3>
+        </div>
+        <div class="card-body">
+
+          <!-- GENDER -->
+          <div class="form-group">
+            <label class="form-label">Biological Sex</label>
+            <div class="gender-toggle">
+              <button class="gender-btn active" id="btn-male" onclick="setGender('male')">
+                <i class="fa-solid fa-mars"></i> Male
+              </button>
+              <button class="gender-btn" id="btn-female" onclick="setGender('female')">
+                <i class="fa-solid fa-venus"></i> Female
+              </button>
+            </div>
+          </div>
+
+          <!-- AGE -->
+          <div class="form-group">
+            <label class="form-label" for="age">Age</label>
+            <div class="input-row">
+              <input class="form-input" type="number" id="age" min="10" max="99" placeholder="25" oninput="calculate()">
+              <span style="color:var(--text3);font-size:0.85rem;padding:0 6px;flex-shrink:0;">yrs</span>
+            </div>
+          </div>
+
+          <!-- WEIGHT -->
+          <div class="form-group">
+            <label class="form-label">Weight</label>
+            <div class="input-row">
+              <input class="form-input" type="number" id="weight" min="1" placeholder="70" oninput="calculate()">
+              <div class="unit-toggle">
+                <button class="unit-btn active" id="wt-kg" onclick="setWeightUnit('kg')">kg</button>
+                <button class="unit-btn" id="wt-lbs" onclick="setWeightUnit('lbs')">lbs</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- HEIGHT -->
+          <div class="form-group">
+            <label class="form-label">Height</label>
+            <div id="height-metric" class="input-row">
+              <input class="form-input" type="number" id="height-cm" min="100" max="250" placeholder="175" oninput="calculate()">
+              <div class="unit-toggle">
+                <button class="unit-btn active" id="ht-cm" onclick="setHeightUnit('cm')">cm</button>
+                <button class="unit-btn" id="ht-in" onclick="setHeightUnit('in')">ft/in</button>
+              </div>
+            </div>
+            <div id="height-imperial" class="hidden" style="margin-top:0;">
+              <div class="height-imperial" style="margin-bottom:6px;">
+                <input class="form-input" type="number" id="height-ft" min="3" max="8" placeholder="5 ft" oninput="calculate()">
+                <input class="form-input" type="number" id="height-in" min="0" max="11" placeholder="10 in" oninput="calculate()">
+                <div class="unit-toggle">
+                  <button class="unit-btn" id="ht-cm2" onclick="setHeightUnit('cm')">cm</button>
+                  <button class="unit-btn active" id="ht-in2" onclick="setHeightUnit('in')">ft/in</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ACTIVITY -->
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Activity Level</label>
+            <div class="activity-grid">
+              <div class="activity-card active" onclick="setActivity(1.2, this)">
+                <div class="activity-dot"></div>
+                <div>
+                  <div class="activity-label">Sedentary</div>
+                  <div class="activity-desc">Desk job / little to no exercise</div>
+                </div>
+              </div>
+              <div class="activity-card" onclick="setActivity(1.375, this)">
+                <div class="activity-dot"></div>
+                <div>
+                  <div class="activity-label">Lightly Active</div>
+                  <div class="activity-desc">Light exercise 1–3 days / week</div>
+                </div>
+              </div>
+              <div class="activity-card" onclick="setActivity(1.55, this)">
+                <div class="activity-dot"></div>
+                <div>
+                  <div class="activity-label">Moderately Active</div>
+                  <div class="activity-desc">Moderate exercise 3–5 days / week</div>
+                </div>
+              </div>
+              <div class="activity-card" onclick="setActivity(1.725, this)">
+                <div class="activity-dot"></div>
+                <div>
+                  <div class="activity-label">Very Active</div>
+                  <div class="activity-desc">Hard exercise 6–7 days / week</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- RIGHT: RESULTS -->
+      <div class="results-panel" id="results-area">
+
+        <div class="empty-state" id="empty-state">
+          <div class="empty-state-icon"><i class="fa-solid fa-bolt-lightning"></i></div>
+          <h4>Enter your stats</h4>
+          <p>Fill in your details on the left to see your personalised calorie breakdown instantly.</p>
+        </div>
+
+        <div id="results-content" class="hidden">
+
+          <!-- BMR HERO -->
+          <div class="stat-hero">
+            <div class="stat-hero-label">Basal Metabolic Rate (BMR)</div>
+            <div class="stat-hero-value" id="bmr-value">—</div>
+            <div class="stat-hero-unit">calories / day at rest</div>
+          </div>
+
+          <!-- TDEE CARDS -->
+          <div class="calorie-row">
+            <div class="calorie-card">
+              <div class="calorie-card-icon">💧</div>
+              <div class="calorie-card-label">Weight Loss</div>
+              <div class="calorie-card-value c-cyan" id="loss-val">—</div>
+              <div class="calorie-card-sub">–500 kcal/day</div>
+            </div>
+            <div class="calorie-card" style="border-color: rgba(200,241,53,0.2);">
+              <div class="calorie-card-icon">⚡</div>
+              <div class="calorie-card-label">Maintenance</div>
+              <div class="calorie-card-value c-maintain" id="maint-val">—</div>
+              <div class="calorie-card-sub">Your TDEE</div>
+            </div>
+            <div class="calorie-card">
+              <div class="calorie-card-icon">🔥</div>
+              <div class="calorie-card-label">Weight Gain</div>
+              <div class="calorie-card-value c-gain" id="gain-val">—</div>
+              <div class="calorie-card-sub">+500 kcal/day</div>
+            </div>
+          </div>
+
+          <!-- MACROS -->
+          <div class="macro-section">
+            <div class="macro-title">Daily Macros — Maintenance Target</div>
+
+            <div class="macro-item">
+              <div class="macro-row">
+                <div class="macro-name">
+                  <span class="macro-dot" style="background:#38e8d4;"></span>
+                  Protein
+                </div>
+                <div class="macro-values" id="protein-val" style="color:#38e8d4;">— g</div>
+              </div>
+              <div class="macro-bar-bg">
+                <div class="macro-bar-fill" id="protein-bar" style="width:0%;background:#38e8d4;"></div>
+              </div>
+            </div>
+
+            <div class="macro-item">
+              <div class="macro-row">
+                <div class="macro-name">
+                  <span class="macro-dot" style="background:#c8f135;"></span>
+                  Carbohydrates
+                </div>
+                <div class="macro-values" id="carbs-val" style="color:#c8f135;">— g</div>
+              </div>
+              <div class="macro-bar-bg">
+                <div class="macro-bar-fill" id="carbs-bar" style="width:0%;background:#c8f135;"></div>
+              </div>
+            </div>
+
+            <div class="macro-item">
+              <div class="macro-row">
+                <div class="macro-name">
+                  <span class="macro-dot" style="background:#f5a623;"></span>
+                  Fats
+                </div>
+                <div class="macro-values" id="fats-val" style="color:#f5a623;">— g</div>
+              </div>
+              <div class="macro-bar-bg">
+                <div class="macro-bar-fill" id="fats-bar" style="width:0%;background:#f5a623;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- STATS ROW -->
+          <div class="info-grid">
+            <div class="info-row">
+              <div class="info-icon s-lime"><i class="fa-solid fa-weight-scale"></i></div>
+              <span class="info-label">BMI Classification</span>
+              <span class="info-value" id="bmi-val">—</span>
+            </div>
+            <div class="info-row">
+              <div class="info-icon s-amber"><i class="fa-solid fa-heart-pulse"></i></div>
+              <span class="info-label">Equation</span>
+              <span class="info-value" style="color:var(--text3);font-size:0.78rem;">Mifflin-St Jeor Formula</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STRENGTH PANEL -->
+  <div class="tab-panel" id="panel-strength">
+
+    <div class="age-grid">
+      <div class="age-card" onclick="setAgeGroup('kids', this)">
+        <div class="age-card-emoji">🏃</div>
+        <div class="age-card-range">Ages 6–17</div>
+        <div class="age-card-label">Kids & Teens</div>
+      </div>
+      <div class="age-card" onclick="setAgeGroup('young', this)">
+        <div class="age-card-emoji">💪</div>
+        <div class="age-card-range">Ages 18–34</div>
+        <div class="age-card-label">Young Adults</div>
+      </div>
+      <div class="age-card" onclick="setAgeGroup('middle', this)">
+        <div class="age-card-emoji">🏋️</div>
+        <div class="age-card-range">Ages 35–64</div>
+        <div class="age-card-label">Middle-Aged</div>
+      </div>
+      <div class="age-card" onclick="setAgeGroup('older', this)">
+        <div class="age-card-emoji">🎯</div>
+        <div class="age-card-range">Ages 65+</div>
+        <div class="age-card-label">Older Adults</div>
+      </div>
+    </div>
+
+    <div id="strength-no-select" class="no-select-state">
+      <div><i class="fa-solid fa-dumbbell"></i></div>
+      <h4>Select an Age Group</h4>
+      <p>Choose a category above to reveal your personalised strength training guide.</p>
+    </div>
+
+    <div id="strength-display" class="hidden"></div>
+  </div>
+
+</main>
+
+<script>
+  // ===== STATE =====
+  let gender = 'male';
+  let weightUnit = 'kg';
+  let heightUnit = 'cm';
+  let activityMult = 1.2;
+
+  // ===== UTILS =====
+  function animateNum(el, val) {
+    el.classList.remove('num-flash');
+    void el.offsetWidth;
+    el.classList.add('num-flash');
+    el.textContent = val;
+  }
+
+  // ===== TABS =====
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + tab).classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
+  }
+
+  // ===== GENDER =====
+  function setGender(g) {
+    gender = g;
+    document.getElementById('btn-male').classList.toggle('active', g === 'male');
+    document.getElementById('btn-female').classList.toggle('active', g === 'female');
+    calculate();
+  }
+
+  // ===== WEIGHT UNIT =====
+  function setWeightUnit(unit) {
+    const wEl = document.getElementById('weight');
+    const current = parseFloat(wEl.value);
+    if (!isNaN(current)) {
+      if (unit === 'lbs' && weightUnit === 'kg') wEl.value = Math.round(current * 2.20462);
+      if (unit === 'kg' && weightUnit === 'lbs') wEl.value = Math.round(current / 2.20462);
+    }
+    weightUnit = unit;
+    document.getElementById('wt-kg').classList.toggle('active', unit === 'kg');
+    document.getElementById('wt-lbs').classList.toggle('active', unit === 'lbs');
+    calculate();
+  }
+
+  // ===== HEIGHT UNIT =====
+  function setHeightUnit(unit) {
+    const cmEl = document.getElementById('height-cm');
+    const ftEl = document.getElementById('height-ft');
+    const inEl = document.getElementById('height-in');
+    const metricDiv = document.getElementById('height-metric');
+    const imperialDiv = document.getElementById('height-imperial');
+
+    if (unit === 'in') {
+      const cm = parseFloat(cmEl.value);
+      if (!isNaN(cm)) {
+        const totalIn = cm / 2.54;
+        ftEl.value = Math.floor(totalIn / 12);
+        inEl.value = Math.round(totalIn % 12);
+      }
+      metricDiv.classList.add('hidden');
+      imperialDiv.classList.remove('hidden');
+      document.getElementById('ht-in').classList.add('active');
+      document.getElementById('ht-cm').classList.remove('active');
+      document.getElementById('ht-in2').classList.add('active');
+      document.getElementById('ht-cm2').classList.remove('active');
+    } else {
+      const ft = parseFloat(ftEl.value) || 0;
+      const inn = parseFloat(inEl.value) || 0;
+      const totalCm = Math.round((ft * 12 + inn) * 2.54);
+      if (totalCm > 0) cmEl.value = totalCm;
+      imperialDiv.classList.add('hidden');
+      metricDiv.classList.remove('hidden');
+      document.getElementById('ht-cm').classList.add('active');
+      document.getElementById('ht-in').classList.remove('active');
+    }
+    heightUnit = unit;
+    calculate();
+  }
+
+  // ===== ACTIVITY =====
+  function setActivity(mult, el) {
+    activityMult = mult;
+    document.querySelectorAll('.activity-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    calculate();
+  }
+
+  // ===== BMI =====
+  function getBMI(weightKg, heightCm) {
+    const hm = heightCm / 100;
+    const bmi = weightKg / (hm * hm);
+    let label, color;
+    if (bmi < 18.5) { label = 'Underweight'; color = '#38e8d4'; }
+    else if (bmi < 25) { label = 'Normal Weight'; color = '#c8f135'; }
+    else if (bmi < 30) { label = 'Overweight'; color = '#f5a623'; }
+    else { label = 'Obese'; color = '#ff5a5a'; }
+    return { bmi: bmi.toFixed(1), label, color };
+  }
+
+  // ===== CALCULATE =====
+  function calculate() {
+    const ageEl = document.getElementById('age');
+    const weightEl = document.getElementById('weight');
+
+    let heightCm;
+    if (heightUnit === 'cm') {
+      heightCm = parseFloat(document.getElementById('height-cm').value);
+    } else {
+      const ft = parseFloat(document.getElementById('height-ft').value) || 0;
+      const inn = parseFloat(document.getElementById('height-in').value) || 0;
+      heightCm = (ft * 12 + inn) * 2.54;
+    }
+
+    const age = parseFloat(ageEl.value);
+    let weightKg = parseFloat(weightEl.value);
+    if (weightUnit === 'lbs') weightKg = weightKg / 2.20462;
+
+    const empty = document.getElementById('empty-state');
+    const content = document.getElementById('results-content');
+
+    if (!age || !weightKg || !heightCm || age < 1 || weightKg < 10 || heightCm < 80) {
+      empty.classList.remove('hidden');
+      content.classList.add('hidden');
+      return;
+    }
+
+    // Mifflin-St Jeor
+    let bmr;
+    if (gender === 'male') {
+      bmr = (10 * weightKg) + (6.25 * heightCm) - (5 * age) + 5;
+    } else {
+      bmr = (10 * weightKg) + (6.25 * heightCm) - (5 * age) - 161;
+    }
+    bmr = Math.round(bmr);
+
+    const tdee = Math.round(bmr * activityMult);
+    const loss = tdee - 500;
+    const gain = tdee + 500;
+
+    // Macros (protein 30%, carbs 40%, fat 30%)
+    const proteinCals = tdee * 0.30;
+    const carbCals = tdee * 0.40;
+    const fatCals = tdee * 0.30;
+    const proteinG = Math.round(proteinCals / 4);
+    const carbsG = Math.round(carbCals / 4);
+    const fatG = Math.round(fatCals / 9);
+
+    // BMI
+    const bmiInfo = getBMI(weightKg, heightCm);
+
+    empty.classList.add('hidden');
+    content.classList.remove('hidden');
+
+    animateNum(document.getElementById('bmr-value'), bmr.toLocaleString());
+    animateNum(document.getElementById('loss-val'), loss.toLocaleString());
+    animateNum(document.getElementById('maint-val'), tdee.toLocaleString());
+    animateNum(document.getElementById('gain-val'), gain.toLocaleString());
+    animateNum(document.getElementById('protein-val'), proteinG + 'g');
+    animateNum(document.getElementById('carbs-val'), carbsG + 'g');
+    animateNum(document.getElementById('fats-val'), fatG + 'g');
+
+    const totalMacroG = proteinG + carbsG + fatG;
+    document.getElementById('protein-bar').style.width = Math.round((proteinG / totalMacroG) * 100) + '%';
+    document.getElementById('carbs-bar').style.width = Math.round((carbsG / totalMacroG) * 100) + '%';
+    document.getElementById('fats-bar').style.width = Math.round((fatG / totalMacroG) * 100) + '%';
+
+    const bmiEl = document.getElementById('bmi-val');
+    bmiEl.textContent = bmiInfo.bmi + ' — ' + bmiInfo.label;
+    bmiEl.style.color = bmiInfo.color;
+  }
+
+  // ===== STRENGTH DATA =====
+  const strengthData = {
+    kids: {
+      label: 'Kids & Teens',
+      range: 'Ages 6–17',
+      freq: '2–3 days per week',
+      types: [
+        'Bodyweight movements: push-ups, squats, lunges, pull-ups',
+        'Light resistance bands and machine-based work (teens 13+)',
+        'Gymnastics, wrestling, and sports-specific conditioning',
+        'Core stability drills: planks, bird-dogs, balance boards',
+      ],
+      safety: [
+        'Always start with a coach-supervised programme',
+        'Never max-load with free weights before growth plates close (~late teens)',
+        'Focus on perfect technique before adding any resistance',
+        'Warm-up and cool-down are non-negotiable at this stage',
+      ],
+      benefits: [
+        'Builds motor skill patterns that last a lifetime',
+        'Supports healthy bone density formation during peak growth',
+        'Improves coordination, agility, and athletic performance',
+        'Boosts confidence and mental resilience through sport',
+      ],
+      notes: [
+        'Strength training is safe and beneficial for children when done properly',
+        'Progress should come from mastering technique, not from adding more weight',
+        'Fun and variety are the best motivation at this stage',
+      ],
+    },
+    young: {
+      label: 'Young Adults',
+      range: 'Ages 18–34',
+      freq: '4–5 days per week',
+      types: [
+        'Compound barbell lifts: squat, deadlift, bench press, overhead press',
+        'Progressive overload with free weights and machines',
+        'Olympic lifting derivatives (power clean, hang snatch) for power',
+        'Hypertrophy training: 8–12 rep ranges with varied volume',
+      ],
+      safety: [
+        'Learn proper bracing and form for all compound movements before heavy loading',
+        'Include at least 1–2 full rest days per week to allow recovery',
+        'Track progressive overload to avoid stalls and overtraining',
+        'Prioritise sleep (7–9 hrs) for optimal adaptation and hormone balance',
+      ],
+      benefits: [
+        'Peak window for muscle mass development (highest anabolic hormone levels)',
+        'Build a strong strength base that protects joints into middle age',
+        'Improves metabolism and body composition significantly',
+        'Enhances mental health, confidence, and stress resilience',
+      ],
+      notes: [
+        'This is the ideal period for maximising strength and muscle gains',
+        'Nutrition consistency is as important as training — protein target: 1.6–2.2 g/kg bodyweight',
+        'Consider periodised programming (strength blocks vs hypertrophy blocks)',
+      ],
+    },
+    middle: {
+      label: 'Middle-Aged Adults',
+      range: 'Ages 35–64',
+      freq: '3–4 days per week',
+      types: [
+        'Compound movements with more conservative loading and warm-up',
+        'Machine-based training to manage joint stress',
+        'Resistance bands and cable work for shoulder/hip health',
+        'Incorporate mobility and flexibility work between sets',
+      ],
+      safety: [
+        'Extended warm-up is critical — at least 10–15 minutes before heavy work',
+        'Pay close attention to recovery; soreness lasts longer at this stage',
+        'Address any existing injuries with a physio before training through pain',
+        'Deload weeks every 4–6 weeks are highly recommended',
+      ],
+      benefits: [
+        'Actively combats age-related muscle loss (sarcopenia begins after 35)',
+        'Maintains and can improve bone density, reducing fracture risk',
+        'Significantly improves insulin sensitivity and metabolic health',
+        'Reduces risk of cardiovascular disease, type 2 diabetes, and depression',
+      ],
+      notes: [
+        'Strength training is the single best tool against metabolic ageing',
+        'Focus on maintaining strength over chasing personal records',
+        'Recovery nutrition (protein within 1–2 hrs post-workout) becomes more important',
+      ],
+    },
+    older: {
+      label: 'Older Adults',
+      range: 'Ages 65+',
+      freq: '2–3 days per week',
+      types: [
+        'Machine-based resistance training for joint safety and stability',
+        'Light dumbbell work and resistance bands',
+        'Chair-based exercises and assisted bodyweight movements',
+        'Balance and stability training: single-leg stands, bosu work',
+      ],
+      safety: [
+        'Always consult your physician before beginning a new programme',
+        'Avoid holding breath; breathe out on exertion to manage blood pressure',
+        'Use machines and supported exercises to reduce fall and injury risk',
+        'Longer warm-up and cool-down with static stretching post-session',
+      ],
+      benefits: [
+        'Directly combats sarcopenia (muscle loss) — the primary driver of frailty',
+        'Improves bone mineral density, drastically reducing osteoporosis risk',
+        'Dramatically reduces fall risk through improved balance and leg strength',
+        'Maintains independence, functional mobility, and quality of life',
+      ],
+      notes: [
+        'Even starting resistance training at 70+ produces meaningful strength gains',
+        'Focus on functional movements: rising from a chair, carrying groceries, climbing stairs',
+        'Social group exercise classes can improve adherence and mental wellbeing',
+      ],
+    },
+  };
+
+  let activeAgeCard = null;
+
+  function setAgeGroup(group, el) {
+    if (activeAgeCard) activeAgeCard.classList.remove('active');
+    el.classList.add('active');
+    activeAgeCard = el;
+
+    const data = strengthData[group];
+    const display = document.getElementById('strength-display');
+    const noSelect = document.getElementById('strength-no-select');
+
+    noSelect.classList.add('hidden');
+    display.classList.remove('hidden');
+
+    display.innerHTML = `
+      <div class="strength-grid">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:0.5rem;">
+          <div class="freq-badge">
+            <i class="fa-solid fa-calendar-days" style="font-size:0.85rem;"></i>
+            ${data.freq}
+          </div>
+          <div style="font-size:0.82rem;color:var(--text3);">Recommended training frequency</div>
+        </div>
+
+        <div class="strength-content">
+          <div class="strength-card">
+            <div class="strength-card-header">
+              <div class="strength-card-icon s-lime"><i class="fa-solid fa-dumbbell"></i></div>
+              <div class="strength-card-title">Training Types</div>
+            </div>
+            <ul class="strength-list">
+              ${data.types.map(t => `<li>${t}</li>`).join('')}
+            </ul>
+          </div>
+
+          <div class="strength-card">
+            <div class="strength-card-header">
+              <div class="strength-card-icon s-red"><i class="fa-solid fa-shield-halved"></i></div>
+              <div class="strength-card-title">Safety Focus</div>
+            </div>
+            <ul class="strength-list">
+              ${data.safety.map(t => `<li>${t}</li>`).join('')}
+            </ul>
+          </div>
+
+          <div class="strength-card">
+            <div class="strength-card-header">
+              <div class="strength-card-icon s-cyan"><i class="fa-solid fa-star"></i></div>
+              <div class="strength-card-title">Key Benefits</div>
+            </div>
+            <ul class="strength-list">
+              ${data.benefits.map(t => `<li>${t}</li>`).join('')}
+            </ul>
+          </div>
+
+          <div class="strength-card">
+            <div class="strength-card-header">
+              <div class="strength-card-icon s-amber"><i class="fa-solid fa-lightbulb"></i></div>
+              <div class="strength-card-title">Expert Notes</div>
+            </div>
+            <ul class="strength-list">
+              ${data.notes.map(t => `<li>${t}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+</script>
+
+</body>
+</html>
